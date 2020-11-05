@@ -28,13 +28,13 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: [lint-docker, lint-go]
-    if: github.ref == 'refs/heads/prepapre' # TODO: change to master
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
 
       - name: Login to registry
         run: |
-          echo ${{ secrets.GCR_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GCR_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
 
       - name: Get Revision
         run: |

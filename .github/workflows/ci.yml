@@ -34,7 +34,7 @@ jobs:
 
       - name: Login to registry
         run: |
-          echo ${{ secrets.GITHUB_CONTAINER_REGISTRY_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin
+          echo ${{ secrets.GCR_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin
 
       - name: Get Revision
         run: |

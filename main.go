@@ -25,7 +25,7 @@ func main() {
 		log.Fatalf("parse flags: %v", err)
 	}
 
-	log.Printf("start github-actions-upstream-watch, version %s", revision)
+	log.Printf("start github-actions-upstream-watch, version %s, state=%s", revision, cfg.State)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -66,16 +66,22 @@ func parseConfig() config {
 
 func run(ctx context.Context, cfg config) error {
 	ticker := time.NewTicker(cfg.Period)
+	defer ticker.Stop()
 
 	gh := &github{Token: cfg.Token}
 	state := &state{Path: cfg.State}
 
+	do := func() {
+		if err := step(ctx, gh, state, cfg); err != nil {
+			log.Printf("error in iteration: %v", err)
+		}
+	}
+
+	do()
 	for {
 		select {
 		case <-ticker.C:
-			if err := step(ctx, gh, state, cfg); err != nil {
-				log.Printf("error in iteration: %v", err)
-			}
+			do()
 		case <-ctx.Done():
 			log.Println("shutdown")
 			return nil

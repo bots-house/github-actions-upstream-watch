@@ -22,11 +22,18 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
       -tags timetzdata \
       -o /bin/github-actions-upstream-watch .
 
+RUN mkdir /data
+
 # run 
 FROM scratch
 
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /bin/github-actions-upstream-watch /bin/github-actions-upstream-watch
+COPY --from=builder /data /data 
 
+VOLUME [ "/data" ]
+
+
+ENV STATE=/data/state.sha
 ENTRYPOINT [ "/bin/github-actions-upstream-watch" ]

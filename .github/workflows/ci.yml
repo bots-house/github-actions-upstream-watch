@@ -27,7 +27,7 @@ jobs:
   build-image:
     name: Build
     runs-on: ubuntu-latest
-    needs: [build-and-test, lint-docker, lint-go]
+    needs: [lint-docker, lint-go]
     if: github.ref == 'refs/heads/prepapre' # TODO: change to master
     steps:
       - uses: actions/checkout@v2

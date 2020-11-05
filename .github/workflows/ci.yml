@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  lint-docker:
+    name: Lint Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint Dockerfile
+        uses: brpaz/hadolint-action@master
+        with:
+          dockerfile: "Dockerfile"
+
+  lint-go:
+    name: Lint Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v1
+        with:
+          version: v1.31
+
+  build-image:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint-docker, lint-go]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Login to registry
+        run: |
+          echo ${{ secrets.GCR_TOKEN }} | docker login ghcr.io --username $GITHUB_ACTOR --password-stdin
+
+      - name: Get Revision
+        run: |
+          revision=${GITHUB_REF##*/}-${GITHUB_SHA::7}-$(date +'%Y%m%d%H%M')
+          echo "revision=$revision" >> $GITHUB_ENV
+
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg REVISION=$revision \
+            --tag ghcr.io/bots-house/github-actions-upstream-watch:latest \
+            --tag ghcr.io/bots-house/github-actions-upstream-watch:$revision \
+            .
+
+      - name: Push image to GitHub Packages
+        run: |
+          docker push ghcr.io/bots-house/github-actions-upstream-watch:$revision
+          docker push ghcr.io/bots-house/github-actions-upstream-watch:latest
+
